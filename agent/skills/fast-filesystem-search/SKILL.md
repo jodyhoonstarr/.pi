@@ -34,14 +34,16 @@ fd tool with extension="ts", path="src"     # extension + path is safe
 
 ### `rg` — content search and scoped file listing
 
-Use for searching inside files, finding references/symbols/config values, or listing files under a path.
+Use for searching inside files, finding references/symbols/config values, or listing files under a path. **Always provide a `path` scope.**
 
 ```
 rg tool with pattern="TODO", path="src", lineNumbers=true
-rg tool with pattern="vite-plus", filesOnly=true
+rg tool with pattern="vite-plus", path="src", filesOnly=true
 rg tool with listFiles=true, path="src/components", pattern="."
 rg tool with listFiles=true, path="src", pattern=".", glob="*.ts"
 ```
+
+> **⚠️ Unscoped `rg` in large projects:** Omitting `path` causes `rg` to search vendored and generated directories (e.g. `node_modules/`, `vendor/`, `.venv/`, `target/`) and can produce errors or timeouts. Always provide `path` unless you explicitly intend a full-tree search and no large dependency trees are present.
 
 > **⚠️ Pipe (`|`) in `pattern` bug:** Shell may interpret `|` as a pipe operator.
 > **Workaround:** Issue separate `rg` calls per term instead of using alternation.
@@ -54,11 +56,24 @@ Use after `fd` or `rg` when there are many candidates and exact names are uncert
 fzf tool with input="<candidate list>", filter="vite config", selectOne=true
 ```
 
+## Pre-Search Checklist
+
+Before issuing any search, answer these questions:
+
+1. **Is the target local source or an external package?**
+   - Bare/external import (e.g., `from 'some-lib'`, `import "github.com/..."`, `require 'rails'`) → the code lives in the language's dependency directory (`node_modules/`, `vendor/`, `.venv/`, etc.), not `src/`
+   - Relative import (e.g., `from './heap'`) → search `src/`
+2. **What is the correct `path` scope?** Never leave it unset.
+3. **Are vendored or generated directories (e.g. `node_modules/`, `vendor/`, `.venv/`, `target/`) in the search path, and should they be?**
+
+When a search returns no results or errors, the first hypothesis should be **"unscoped search hit a large tree"** — not "tool unavailable." Re-issue with a narrower `path` before falling back to built-in tools.
+
 ## Heuristics
 
 - **File/folder/path lookup** → start with `fd`
-- **Definition, reference, import, config value** → start with `rg`
+- **Definition, reference, import, config value** → start with `rg` with a `path` scope
 - **Both path scope and name pattern** → use `rg` with `listFiles=true` (avoids `fd` bug)
+- **External package symbol** → scope `rg` to the language's dependency directory (e.g. `node_modules/<pkg>/src`, `vendor/<pkg>`, `.venv/lib/<pkg>`)
 - **Many candidates, uncertain name** → pipe results into `fzf`
 - **Known full path** → use `ls` directly, not `fd`
 - Fall back to `find`/`grep` only if these tools can't express the query
