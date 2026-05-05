@@ -2,15 +2,10 @@
 
 Personal [pi](https://github.com/mariozechner/pi-coding-agent) coding agent setup.
 
-## Settings
-- Default provider: GitHub Copilot
-- Default model: `claude-sonnet-4.6`
-- Thinking blocks hidden
-- Theme: `pi-cursor-theme`
-
 ## Extensions
 - **ask-do-commands** — Adds `/ask` (read-only), `/do` (full access), and `/normal` (toggle) slash commands; regular prompts default to ASK mode automatically
 - **filesystem-search-tools** — Registers `fd`, `rg`, and `fzf` as safe, sandboxed pi tools (no general bash access)
+- **web-fetch** — Overrides the built-in `fetch_web` tool; fetches pages via curl, converts to Markdown, and saves full content to a temp file when output is truncated
 
 ## Skills
 - **edit-tool-usage** — Guidelines for correct edit tool parameter formatting
