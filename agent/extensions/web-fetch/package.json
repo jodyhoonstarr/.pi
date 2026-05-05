@@ -1,0 +1,9 @@
+{
+  "name": "pi-web-fetch",
+  "private": true,
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "jsdom": "^28.1.0",
+    "turndown": "^7.2.2"
+  }
+}
