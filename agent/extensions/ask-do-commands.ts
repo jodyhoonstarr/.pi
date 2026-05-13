@@ -21,7 +21,7 @@ interface ExtensionState {
 
 export default function askDoExtension(pi: ExtensionAPI) {
 	// Constants
-	const READ_ONLY_TOOLS = ["read", "grep", "find", "ls", "fetch_web", "fd", "rg", "fzf"];
+	const READ_ONLY_TOOLS = ["read", "grep", "find", "ls", "fetch_web"];
 	const STATUS_MESSAGES = {
 		ask: "🔒 ASK (+r)",
 		do: "🔓 DO (+rw)", 
