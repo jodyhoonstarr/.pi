@@ -179,21 +179,38 @@ export default function askDoExtension(pi: ExtensionAPI) {
     },
   });
 
+  // Block any non-read-only tool calls in ask mode as a defence-in-depth guardrail
+  pi.on("tool_call", async (event) => {
+    if (state.currentMode === "ask" && !state.availableReadOnlyTools.includes(event.toolName)) {
+      return {
+        block: true,
+        reason: `Tool '${event.toolName}' is not available in ASK mode. Only read-only tools are permitted: ${state.availableReadOnlyTools.join(", ")}. To make changes, the user must switch to /do mode.`
+      };
+    }
+  });
+
   // Modify system prompt based on current mode
   pi.on("before_agent_start", async (event) => {
     if (state.currentMode === "ask") {
+      const blockedTools = state.allTools.filter(t => !state.availableReadOnlyTools.includes(t));
       return {
+        message: {
+          customType: "ask-mode-context",
+          content: `MODE: ASK (read-only). This conversation may contain prior turns where tools such as ${blockedTools.join(", ")} were used in DO mode. Those tools are NOT available in this turn. Do not attempt to call them.`,
+          display: false,
+        },
         systemPrompt: event.systemPrompt + `
 
 IMPORTANT: You are in ASK MODE (read-only). You must:
-- Only use read-only tools to gather information
+- ONLY use these read-only tools: ${state.availableReadOnlyTools.join(", ")}
+- The following tools are BLOCKED and will fail if called: ${blockedTools.length > 0 ? blockedTools.join(", ") : "(none in this session)"}
+- This conversation may contain earlier turns where blocked tools (e.g. edit, bash, write) were used in DO mode — those tool calls are not valid precedents for this turn
 - NEVER make any changes to files or execute commands that modify the system
 - When you need command output for debugging/analysis, instruct the user to run commands with ! prefix
 - Examples: "Please run \`!kubectl get pods\` and paste the output", "Run \`!hostname\` to check the server", "Execute \`!curl -I https://example.com\` to test connectivity"
 - The !command pattern allows safe information gathering without direct system access
 - Focus on answering questions and providing information
-- Available tools are limited to: ${state.availableReadOnlyTools.join(", ")}
-- If the user's request requires making changes, explain what you would do but don't actually do it
+- If the user's request requires making changes, explain what you would do but tell them to use /do mode instead
 `
       };
     } else if (state.currentMode === "do") {
