@@ -22,6 +22,7 @@ interface ExtensionState {
   originalTools: string[];
   allTools: string[];
   availableReadOnlyTools: string[];
+  modeSetByCommand: boolean;
 }
 
 export default function askDoExtension(pi: ExtensionAPI) {
@@ -49,7 +50,8 @@ export default function askDoExtension(pi: ExtensionAPI) {
     autoAskEnabled: true,
     originalTools: [],
     allTools: [],
-    availableReadOnlyTools: []
+    availableReadOnlyTools: [],
+    modeSetByCommand: false
   };
 
   // Helper functions
@@ -138,6 +140,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
         return;
       }
 
+      state.modeSetByCommand = true;
       await switchToMode("ask", ctx, NOTIFICATIONS.askMode);
       pi.sendUserMessage(args);
     },
@@ -152,6 +155,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
         return;
       }
 
+      state.modeSetByCommand = true;
       await switchToMode("do", ctx, NOTIFICATIONS.doMode);
       pi.sendUserMessage(args);
     },
@@ -215,6 +219,11 @@ IMPORTANT: You are in ASK MODE (read-only). You must:
       };
     } else if (state.currentMode === "do") {
       return {
+        message: {
+          customType: "do-mode-context",
+          content: "MODE: DO (full access). All tools are available this turn. Any prior 'MODE: ASK' messages in this conversation applied to earlier turns only and do not restrict this turn.",
+          display: false,
+        },
         systemPrompt: event.systemPrompt + `
 
 IMPORTANT: You are in DO MODE (full access). You can:
@@ -232,6 +241,7 @@ PRIOR CONTEXT WARNING: Any analysis, plans, or conclusions in this conversation 
 
   // Reset mode after agent completes and restore resting model
   pi.on("agent_end", async (_event, ctx) => {
+    state.modeSetByCommand = false;
     if (state.currentMode !== "normal") {
       state.currentMode = "normal";
       setModeTools("normal");
@@ -251,7 +261,8 @@ PRIOR CONTEXT WARNING: Any analysis, plans, or conclusions in this conversation 
     }
 
     // Auto-switch to ask mode if enabled and not already in do mode
-    if (text.length > 0 && state.autoAskEnabled && state.currentMode !== "do") {
+    // Skip if mode was explicitly set by a slash command (to avoid race condition with sendUserMessage)
+    if (text.length > 0 && state.autoAskEnabled && state.currentMode !== "do" && !state.modeSetByCommand) {
       state.currentMode = "ask";
       setModeTools("ask");
       await setModeModel("ask", ctx);

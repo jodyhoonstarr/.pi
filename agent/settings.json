@@ -1,9 +1,11 @@
 {
-  "lastChangelogVersion": "0.74.0",
+  "lastChangelogVersion": "0.75.4",
   "defaultProvider": "github-copilot",
   "defaultModel": "claude-haiku-4.5",
   "packages": [
     "npm:pi-cursor-theme"
   ],
-  "hideThinkingBlock": true
+  "hideThinkingBlock": true,
+  "quietStartup": false,
+  "collapseChangelog": true
 }
