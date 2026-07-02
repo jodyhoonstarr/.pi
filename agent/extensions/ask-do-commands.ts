@@ -7,9 +7,10 @@
  * - /normal: Toggle auto-ask behavior
  *
  * Model policy:
- * - auto-ask enabled (default): haiku at rest and during ask turns
- * - /do turn: sonnet
- * - auto-ask disabled (/normal toggle): sonnet at rest
+ * - auto-ask enabled (default): ask model at rest and during ask turns
+ * - /do turn: do model
+ * - auto-ask disabled (/normal toggle): do model at rest
+ * - once /do has been used in the session: do model permanently (ask model never restored)
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -23,6 +24,7 @@ interface ExtensionState {
   allTools: string[];
   availableReadOnlyTools: string[];
   modeSetByCommand: boolean;
+  hasUsedDoMode: boolean;
 }
 
 export default function askDoExtension(pi: ExtensionAPI) {
@@ -51,7 +53,8 @@ export default function askDoExtension(pi: ExtensionAPI) {
     originalTools: [],
     allTools: [],
     availableReadOnlyTools: [],
-    modeSetByCommand: false
+    modeSetByCommand: false,
+    hasUsedDoMode: false
   };
 
   // Helper functions
@@ -65,11 +68,13 @@ export default function askDoExtension(pi: ExtensionAPI) {
 
   /** Switch to the model appropriate for a given mode. */
   async function setModeModel(mode: Mode, ctx: any): Promise<void> {
-    // "normal" resting state: haiku if auto-ask on, sonnet if off
-    const cfg = mode === "do" ? DO_MODEL
-      : mode === "ask" ? ASK_MODEL
-        : state.autoAskEnabled ? ASK_MODEL
-          : DO_MODEL;
+    // Once /do has been used, always stay on the do model — never revert to the ask model
+    // "normal" resting state: ask model if auto-ask on, do model if off
+    const cfg = state.hasUsedDoMode ? DO_MODEL
+      : mode === "do" ? DO_MODEL
+        : mode === "ask" ? ASK_MODEL
+          : state.autoAskEnabled ? ASK_MODEL
+            : DO_MODEL;
 
     const model = ctx.modelRegistry.find(cfg.provider, cfg.id);
     if (!model) {
@@ -122,7 +127,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
   // Initialize on session start and show startup notification
   pi.on("session_start", async (event, ctx) => {
     initializeToolLists();
-    // Default to haiku since auto-ask is enabled on startup
+    // Default to ask model since auto-ask is enabled on startup
     await setModeModel("ask", ctx);
 
     if (event.reason === "startup") {
@@ -155,6 +160,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
         return;
       }
 
+      state.hasUsedDoMode = true; // Permanently latch into do mode for this session
       state.modeSetByCommand = true;
       await switchToMode("do", ctx, NOTIFICATIONS.doMode);
       pi.sendUserMessage(args);
@@ -168,7 +174,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
       state.autoAskEnabled = !state.autoAskEnabled;
 
       if (state.autoAskEnabled) {
-        // Enabling: switch to haiku
+        // Enabling: switch to ask model
         await setModeModel("ask", ctx);
         ctx.ui.notify(NOTIFICATIONS.autoEnabled, "info");
         updateStatus("normal", ctx, true);
@@ -176,7 +182,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
         // Disabling: switch to sonnet and reset to normal mode
         state.currentMode = "normal";
         setModeTools("normal");
-        await setModeModel("normal", ctx); // autoAskEnabled is now false → sonnet
+        await setModeModel("normal", ctx); // autoAskEnabled is now false → do model
         updateStatus("normal", ctx, false);
         ctx.ui.notify(NOTIFICATIONS.autoDisabled, "info");
       }
@@ -246,7 +252,8 @@ PRIOR CONTEXT WARNING: Any analysis, plans, or conclusions in this conversation 
       state.currentMode = "normal";
       setModeTools("normal");
     }
-    // Restore resting model: haiku if auto-ask on, sonnet if off
+    // Restore resting model: ask model if auto-ask on, do model if off
+    // (setModeModel will always pick the do model if hasUsedDoMode is true)
     await setModeModel("normal", ctx);
     updateStatus("normal", ctx, state.autoAskEnabled);
   });
