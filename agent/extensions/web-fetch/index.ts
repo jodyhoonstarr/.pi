@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { Text } from "@mariozechner/pi-tui";
 import {
   DEFAULT_MAX_BYTES,
   DEFAULT_MAX_LINES,
@@ -97,6 +98,57 @@ export default function (pi: ExtensionAPI) {
           fullOutputPath: fetched.fullOutputPath,
         },
       };
+    },
+
+    renderCall(args, theme) {
+      let text = theme.fg("toolTitle", theme.bold("fetch_web "));
+      text += theme.fg("accent", args.url);
+      if (args.timeoutMs) {
+        text += theme.fg("dim", ` (${args.timeoutMs}ms)`);
+      }
+      return new Text(text, 0, 0);
+    },
+
+    renderResult(result, { expanded, isPartial }, theme) {
+      if (isPartial) return new Text(theme.fg("warning", "Fetching…"), 0, 0);
+
+      const content = result.content[0];
+
+      if (result.isError || (content?.type === "text" && content.text.startsWith("Error"))) {
+        const errText = content?.type === "text" ? content.text : "Fetch failed";
+        return new Text(theme.fg("error", errText.split("\n")[0] ?? "Fetch failed"), 0, 0);
+      }
+
+      if (content?.type !== "text") {
+        return new Text(theme.fg("dim", "No content"), 0, 0);
+      }
+
+      const details = result.details as FetchWebResult | undefined;
+      const lines = content.text.split("\n");
+      const lineCount = lines.length;
+
+      let summary = theme.fg("success", details?.title ? `"${details.title}"` : "Fetched");
+      summary += theme.fg("dim", ` · ${lineCount} lines`);
+      if (details?.truncated) {
+        summary += theme.fg("warning", " (truncated)");
+      }
+
+      if (!expanded) {
+        return new Text(summary, 0, 0);
+      }
+
+      // Expanded: show content (capped to keep the terminal manageable)
+      const MAX_LINES = 200;
+      const displayLines = lines.slice(0, MAX_LINES);
+      let output = summary;
+      for (const line of displayLines) {
+        output += `\n${theme.fg("toolOutput", line)}`;
+      }
+      if (lineCount > MAX_LINES) {
+        output += `\n${theme.fg("muted", `… ${lineCount - MAX_LINES} more lines`)}` ;
+      }
+
+      return new Text(output, 0, 0);
     },
   });
 }
