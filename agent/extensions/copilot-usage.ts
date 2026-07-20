@@ -59,6 +59,14 @@ function ghProgressBar(pct: number): string {
   return `${bar} ${Math.ceil(pct)}%`;
 }
 
+/** Render context-window usage as a 10-segment progress bar. */
+function contextProgressBar(pct: number): string {
+  const TOTAL = 10;
+  const displayPct = Math.round(Math.max(0, Math.min(100, pct)));
+  const fullCells = Math.floor(displayPct / 10);
+  return `${"▰".repeat(fullCells)}${"▱".repeat(TOTAL - fullCells)} ${displayPct}%`;
+}
+
 function ghHeaders(): Record<string, string> {
   return {
     Authorization: `Bearer ${PAT}`,
@@ -209,8 +217,7 @@ export default function (pi: ExtensionAPI) {
           // Context window usage percentage
           const ctxUsage = sessionCtx?.getContextUsage?.();
           if (ctxUsage?.percent != null) {
-            const ctxPct = Math.round(ctxUsage.percent);
-            const ctxStr = `CX${ctxPct}%`;
+            const ctxStr = contextProgressBar(ctxUsage.percent);
             parts.push(
               ctxUsage.percent > 90 ? theme.fg("error",   ctxStr) :
               ctxUsage.percent > 70 ? theme.fg("warning", ctxStr) :

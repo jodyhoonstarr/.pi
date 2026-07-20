@@ -30,8 +30,9 @@ interface ExtensionState {
 export default function askDoExtension(pi: ExtensionAPI) {
   // Constants
   const READ_ONLY_TOOLS = ["read", "grep", "find", "ls", "fetch_web"];
-  const ASK_MODEL = { provider: "github-copilot", id: "claude-haiku-4.5" };
-  const DO_MODEL = { provider: "github-copilot", id: "claude-sonnet-4.6" };
+  const ASK_MODEL = { provider: "github-copilot", id: "gpt-5.6-luna" };
+  const DO_MODEL = { provider: "github-copilot", id: "gpt-5.6-terra" };
+  const MODE_THINKING_LEVEL = "medium" as const;
   const STATUS_MESSAGES = {
     ask: "🔒 ASK (+r)",
     do: "🔓 DO (+rw)",
@@ -83,6 +84,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
     }
     const ok = await pi.setModel(model);
     if (!ok) ctx.ui.notify(`No API key for model (${cfg.id})`, "warning");
+    pi.setThinkingLevel(MODE_THINKING_LEVEL);
   }
 
   function setModeTools(mode: Mode): void {
