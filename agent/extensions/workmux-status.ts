@@ -16,7 +16,7 @@ export default function (pi: ExtensionAPI) {
     setStatus("working");
   });
 
-  pi.on("agent_end", async () => {
+  pi.on("agent_settled", async () => {
     setStatus("done");
   });
 }

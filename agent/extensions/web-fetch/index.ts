@@ -1,12 +1,12 @@
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { Text } from "@mariozechner/pi-tui";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
 import {
   DEFAULT_MAX_BYTES,
   DEFAULT_MAX_LINES,
   formatSize,
   truncateHead,
-} from "@mariozechner/pi-coding-agent";
-import { Type } from "@sinclair/typebox";
+} from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -26,7 +26,7 @@ export interface FetchWebResult {
 }
 
 const FETCH_WEB_PARAMS = Type.Object({
-  url: Type.String({ description: "The URL to fetch" }),
+  url: Type.String({ description: "Public http or https URL to fetch" }),
   timeoutMs: Type.Optional(
     Type.Number({ description: "Request timeout in milliseconds", default: 30000 }),
   ),
@@ -76,9 +76,10 @@ export default function (pi: ExtensionAPI) {
     name: "fetch_web",
     label: "Fetch Web",
     description:
-      `Fetch a web page with curl, extract readable content, and convert it to Markdown. ` +
-      `Good for docs, blog posts, and article-like pages. Output is truncated to ` +
-      `${DEFAULT_MAX_LINES} lines or ${formatSize(DEFAULT_MAX_BYTES)}.`,
+      `Fetch a public web page with curl, extract readable content, and convert it to Markdown. ` +
+      `Good for docs, blog posts, and article-like pages. Private, loopback, link-local, and ` +
+      `reserved network addresses are blocked unless PI_FETCH_WEB_ALLOW_PRIVATE_NETWORK=1. Output is ` +
+      `truncated to ${DEFAULT_MAX_LINES} lines or ${formatSize(DEFAULT_MAX_BYTES)}.`, 
     promptSnippet: "Fetch a URL with curl and convert the readable page content to markdown",
     promptGuidelines: [
       "Use this tool when the user asks for information from a web page or documentation URL.",

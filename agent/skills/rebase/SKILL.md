@@ -2,7 +2,7 @@
 name: rebase
 description: Rebase the current branch with smart conflict resolution.
 disable-model-invocation: true
-allowed-tools: Read, Bash, Glob, Grep
+allowed-tools: read bash find grep
 ---
 
 <!-- Customize conflict resolution strategy to match your preferences. -->

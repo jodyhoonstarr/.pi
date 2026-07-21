@@ -2,7 +2,7 @@
 name: merge
 description: Commit, rebase, and merge the current branch.
 disable-model-invocation: true
-allowed-tools: Read, Bash, Glob, Grep
+allowed-tools: read bash find grep
 ---
 
 <!-- Customize the commit style and rebase behavior to match your workflow. -->

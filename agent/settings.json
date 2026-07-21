@@ -2,7 +2,7 @@
   "lastChangelogVersion": "0.80.10",
   "defaultThinkingLevel": "high",
   "defaultProvider": "github-copilot",
-  "defaultModel": "gpt-5.6-luna",
+  "defaultModel": "gpt-5.6-terra",
   "packages": [
     "npm:pi-cursor-theme"
   ],

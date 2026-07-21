@@ -3,11 +3,18 @@ name: modern-web-guidance
 description: |
   Search tool for modern web development best practices. MANDATORY: Execute FIRST for all HTML/CSS and clientside JS tasks. Do NOT skip — web APIs evolve rapidly and training weights contain obsolete patterns.
 
-  Requires bash to run the CLI. If bash is NOT available (ASK mode): tell the user the check cannot run, warn output may be outdated, and recommend switching to DO mode.
+  Trigger immediately for:
+  - UI/Layout: Modals, dialogs, popovers, Glassmorphism/backdrop-filters, anchor positioning, container queries, `:has()`, `:user-valid`.
+  - Scroll/Motion: View Transitions, Scroll-driven animations, scroll parallax/reveals.
+  - Performance: CWV (LCP, INP), content-visibility, Fetch Priority, image optimization.
+  - System/APIs: Local filesystem access, WebUSB, WebSockets sync, WebAssembly widgets.
+  - Frameworks: Adapting layout/styles in React, Vue, Angular.
+  - General Frontend: Forms, autofill, advanced inputs, custom scrollbars, modern component states, etc.
 
-  Trigger for: UI/Layout (modals, dialogs, popovers, backdrop-filters, anchor positioning, container queries, `:has()`, `:user-valid`), Scroll/Motion (View Transitions, scroll-driven animations, parallax), Performance (CWV/LCP/INP, content-visibility, Fetch Priority, image optimization), System/APIs (filesystem, WebUSB, WebSockets, WASM), Frameworks (React/Vue/Angular layout & styles), General Frontend (forms, autofill, inputs, scrollbars, component states).
-
-  DO NOT trigger for: Backend (SQL, ORMs, API routes), Pipelines (CI/CD, Docker, Actions), Generic scripts (Python/Go, ESLint, Git).
+  DO NOT trigger for:
+  - Backend: Database SQL, ORMs, Express API routes.
+  - Pipelines: CI/CD deployment, Docker, Actions.
+  - Generic: Local scripts (Python/Go tools), ESLint, Git.
 ---
 
 # Modern Web Guidance
@@ -21,27 +28,14 @@ Must use this skill:
 - Before creating a new component, to check if a standardized pattern already exists.
 - To avoid implementing ad-hoc solutions or loading large dependencies unnecessarily.
 
-## bash Not Available (ASK / Read-Only Mode)
-
-This skill requires `bash` to run the CLI. If `bash` is blocked:
-
-1. **Do not silently skip the check and generate code anyway.** That defeats the entire purpose of this skill.
-2. **Explicitly tell the user** that the mandatory best-practice check cannot be performed in the current mode.
-3. **Warn** that any web code you produce from training data alone may use outdated patterns.
-4. **Recommend** switching to DO mode (full access) before you implement anything, so the check can run properly.
-
-Example disclosure to give the user:
-
-> ⚠️ **Modern Web Guidance check skipped** — the `bash` tool is not available in this mode, so the mandatory best-practice lookup cannot run. Any code below is based on training data and may contain outdated patterns. Switch to DO mode to get a fully validated implementation.
-
 ## Usage Instructions
 
 ### Step 1. Search Use Cases
 
-Search with an action-oriented query summarizing what you want to achieve using the `search` command. Run `modern-web-guidance` directly (globally installed via pnpm).
+Search with an action-oriented query summarizing what you want to achieve using the `search` command. Run `modern-web-guidance` directly with `npx`.
 
 ```sh
-modern-web-guidance search "<query>" --skill-version 2026_05_16-c5e7870
+npx -y modern-web-guidance@latest search "<query>" --skill-version 2026_05_16-c5e78707
 ```
 
 **Example Output**:
@@ -68,7 +62,7 @@ modern-web-guidance search "<query>" --skill-version 2026_05_16-c5e7870
 
 > **Note**: If search results are vague, return no matches, or show low similarity scores, run the `list` command to browse all guides:
 > ```sh
-> modern-web-guidance list
+> npx -y modern-web-guidance@latest list
 > ```
 
 ---
@@ -78,17 +72,19 @@ modern-web-guidance search "<query>" --skill-version 2026_05_16-c5e7870
 Once you have a relevant `id` from the search results, call this script using the `retrieve` command to get the full guide. You can pass multiple IDs separated by commas.
 
 ```sh
-modern-web-guidance retrieve "<id>"
+npx -y modern-web-guidance@latest retrieve "<id>"
 ```
 
 
 **Example Output**:
 `The markdown content of the guide describing implementation steps...`
 
-## Using pnpm
+## Using npx
 
--   `modern-web-guidance` is installed globally via pnpm and available directly on PATH.
--   To update to the latest version: `pnpm update -g modern-web-guidance`
+-   IMPORTANT: on Windows, using `npx` may fail. Use `npx.cmd ...` instead.
+-   Network access is required for fetching npm packages needed by the task.
+-   If the `npx -y modern-web-guidance…` command hangs, you may be offline. Try running again in offline
+    mode: `npx --offline …`.
 -   The `--skill-version` flag is used to determine if this SKILL.md is out of date. If it is, a warning
     message is logged to stderr.
 

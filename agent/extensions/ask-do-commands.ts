@@ -13,7 +13,7 @@
  * - once /do has been used in the session: do model permanently (ask model never restored)
  */
 
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 type Mode = "ask" | "do" | "normal";
 
@@ -32,7 +32,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
   const READ_ONLY_TOOLS = ["read", "grep", "find", "ls", "fetch_web"];
   const ASK_MODEL = { provider: "github-copilot", id: "gpt-5.6-luna" };
   const DO_MODEL = { provider: "github-copilot", id: "gpt-5.6-terra" };
-  const MODE_THINKING_LEVEL = "medium" as const;
+  const MODE_THINKING_LEVEL = "high" as const;
   const STATUS_MESSAGES = {
     ask: "🔒 ASK (+r)",
     do: "🔓 DO (+rw)",
@@ -247,8 +247,9 @@ PRIOR CONTEXT WARNING: Any analysis, plans, or conclusions in this conversation 
     return undefined;
   });
 
-  // Reset mode after agent completes and restore resting model
-  pi.on("agent_end", async (_event, ctx) => {
+  // Reset only after the full agent run settles. `agent_end` can precede retries,
+  // compaction recovery, or queued follow-ups, which must retain the active mode.
+  pi.on("agent_settled", async (_event, ctx) => {
     state.modeSetByCommand = false;
     if (state.currentMode !== "normal") {
       state.currentMode = "normal";

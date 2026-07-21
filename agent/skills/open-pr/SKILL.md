@@ -2,7 +2,7 @@
 name: open-pr
 description: Write a PR description using conversation context and open PR creation in browser.
 disable-model-invocation: true
-allowed-tools: Read, Bash, Glob, Grep
+allowed-tools: read bash find grep
 ---
 
 <!-- This is a starting point. Customize the template and guidelines to match your team's PR conventions. -->
