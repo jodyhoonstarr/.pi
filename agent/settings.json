@@ -1,13 +1,13 @@
 {
-  "lastChangelogVersion": "0.80.10",
-  "defaultThinkingLevel": "high",
+  "lastChangelogVersion": "0.83.0",
+  "defaultThinkingLevel": "xhigh",
   "defaultProvider": "github-copilot",
-  "defaultModel": "gpt-5.6-terra",
+  "defaultModel": "gpt-5.6-luna",
   "packages": [
     "npm:pi-cursor-theme"
   ],
   "hideThinkingBlock": true,
-  "quietStartup": false,
+  "quietStartup": true,
   "collapseChangelog": true,
   "theme": "dark"
 }

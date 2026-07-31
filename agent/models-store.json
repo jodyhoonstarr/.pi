@@ -195,6 +195,41 @@
         }
       },
       {
+        "id": "claude-opus-5",
+        "name": "Claude Opus 5",
+        "api": "anthropic-messages",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 5,
+          "output": 25,
+          "cacheRead": 0.5,
+          "cacheWrite": 6.25
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 64000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "thinkingLevelMap": {
+          "xhigh": "xhigh",
+          "max": "max",
+          "minimal": "low"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
+        }
+      },
+      {
         "id": "claude-sonnet-4",
         "name": "Claude Sonnet 4 (latest)",
         "api": "anthropic-messages",
@@ -509,7 +544,15 @@
         },
         "thinkingLevelMap": {
           "off": null,
-          "minimal": "low"
+          "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": null,
+          "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -541,6 +584,9 @@
           "off": null,
           "minimal": "low",
           "xhigh": "xhigh"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -572,6 +618,9 @@
           "off": null,
           "minimal": "low",
           "xhigh": "xhigh"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -602,7 +651,14 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
-          "xhigh": "xhigh"
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -642,7 +698,14 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
-          "xhigh": "xhigh"
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -673,7 +736,14 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
-          "xhigh": "xhigh"
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -705,6 +775,9 @@
           "off": null,
           "minimal": "low",
           "xhigh": "xhigh"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -744,7 +817,14 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
-          "xhigh": "xhigh"
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -784,8 +864,14 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -825,8 +911,14 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -866,8 +958,14 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -924,9 +1022,20 @@
           "Editor-Version": "vscode/1.107.0",
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
+        },
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": null,
+          "max": null
         }
       }
     ],
-    "checkedAt": 1784638359450
+    "checkedAt": 1785502662849,
+    "lastModified": 1785146167000,
+    "etag": "W/\"eed6f96ab3f57ecb50da2b0d0712485c\""
   }
 }
