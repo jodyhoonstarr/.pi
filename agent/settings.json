@@ -1,6 +1,6 @@
 {
   "lastChangelogVersion": "0.83.0",
-  "defaultThinkingLevel": "xhigh",
+  "defaultThinkingLevel": "medium",
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.6-luna",
   "packages": [

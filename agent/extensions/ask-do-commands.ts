@@ -252,13 +252,17 @@ PRIOR CONTEXT WARNING: Any analysis, plans, or conclusions in this conversation 
   // compaction recovery, or queued follow-ups, which must retain the active mode.
   pi.on("agent_settled", async (_event, ctx) => {
     state.modeSetByCommand = false;
-    if (state.currentMode !== "normal") {
+    const wasNormal = state.currentMode === "normal";
+    if (!wasNormal) {
       state.currentMode = "normal";
       setModeTools("normal");
     }
-    // Restore resting model: ask model if auto-ask on, do model if off
-    // (setModeModel will always pick the do model if hasUsedDoMode is true)
-    await setModeModel("normal", ctx);
+    // Restore the policy model after explicit ASK/DO turns, when auto-ask is
+    // enabled, or when the DO latch is active. Otherwise, preserve a model
+    // and thinking level manually selected in /normal mode.
+    if (!wasNormal || state.autoAskEnabled || state.hasUsedDoMode) {
+      await setModeModel("normal", ctx);
+    }
     updateStatus("normal", ctx, state.autoAskEnabled);
   });
 

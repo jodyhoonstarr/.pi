@@ -21,6 +21,7 @@ import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 const PAT = process.env.GITHUB_READONLY_PLAN_PAT ?? "";
 
 const POLL_MS = 5 * 60 * 1_000;
+const ADDITIONAL_USAGE_CAP = 10;
 
 // Monthly AI credit allowances keyed by Copilot token SKU
 const SKU_CAP: Record<string, number> = {
@@ -43,11 +44,11 @@ function fmtN(n: number): string {
 }
 
 /**
- * Render a 10-segment block progress bar for a GitHub monthly usage percentage.
+ * Render a 10-segment block progress bar for a usage percentage.
  * Rounds to the nearest 5% for bar rendering; shows the raw ceil'd % as a number.
- * e.g. 32% → "■■■□□□□□□□ 32%"
+ * e.g. 32% → "■■■□□□□□□□ 32%TOK"
  */
-function ghProgressBar(pct: number): string {
+function ghProgressBar(pct: number, annotation = "TOK"): string {
   const TOTAL = 10;
   const rounded = Math.round(pct / 5) * 5;
   const fullCells = Math.min(TOTAL, Math.floor(rounded / 10));
@@ -56,15 +57,12 @@ function ghProgressBar(pct: number): string {
   const bar = "\u25a0".repeat(fullCells)
             + (halfCell ? "\u25e7" : "")
             + "\u25a1".repeat(emptyCells);
-  return `${bar} ${Math.ceil(pct)}%`;
+  return `${bar} ${Math.ceil(pct)}%${annotation}`;
 }
 
-/** Render context-window usage as a 10-segment progress bar. */
+/** Render context-window usage with the same style as token usage. */
 function contextProgressBar(pct: number): string {
-  const TOTAL = 10;
-  const displayPct = Math.round(Math.max(0, Math.min(100, pct)));
-  const fullCells = Math.floor(displayPct / 10);
-  return `${"▰".repeat(fullCells)}${"▱".repeat(TOTAL - fullCells)} ${displayPct}%`;
+  return ghProgressBar(Math.max(0, Math.min(100, pct)), "CTX");
 }
 
 function ghHeaders(): Record<string, string> {
@@ -79,6 +77,7 @@ function ghHeaders(): Record<string, string> {
 
 export default function (pi: ExtensionAPI) {
   let creditsUsed: number | null = null;
+  let additionalUsageUsed: number | null = null;
   let creditsCap = 7_000;
   let creditsErr: string | null = null;
   let ghUser: string | null = null;
@@ -148,9 +147,13 @@ export default function (pi: ExtensionAPI) {
         tuiRef?.requestRender();
         return;
       }
-      const body = (await r.json()) as { usageItems: Array<{ grossQuantity: number }> };
+      const body = (await r.json()) as {
+        usageItems: Array<{ grossQuantity: number; netAmount?: number }>;
+      };
       // grossQuantity can be fractional — round to nearest whole credit
       creditsUsed = Math.round(body.usageItems.reduce((s, x) => s + x.grossQuantity, 0));
+      // netAmount is the amount billed after included-credit discounts, i.e. additional usage.
+      additionalUsageUsed = body.usageItems.reduce((s, x) => s + (x.netAmount ?? 0), 0);
       creditsErr = null;
     } catch {
       creditsErr = "network err";
@@ -165,6 +168,7 @@ export default function (pi: ExtensionAPI) {
     thinkingLevel = readDefaultThinkingLevel();  // re-read each session in case settings changed
     creditsCap = readCap();
     creditsUsed = null;
+    additionalUsageUsed = null;
     creditsErr = null;
 
     // Replace the default pi footer with our custom one
@@ -231,11 +235,17 @@ export default function (pi: ExtensionAPI) {
           } else if (creditsUsed !== null) {
             const pct = (creditsUsed / creditsCap) * 100;
             const barStr = ghProgressBar(pct);
-            parts.push(
-              pct > 90 ? theme.fg("error",   barStr) :
-              pct > 70 ? theme.fg("warning", barStr) :
-                         barStr,
-            );
+            parts.push(barStr);
+
+            if (additionalUsageUsed !== null) {
+              const additionalPct = (additionalUsageUsed / ADDITIONAL_USAGE_CAP) * 100;
+              const additionalBarStr = ghProgressBar(Math.max(0, additionalPct), "$");
+              parts.push(
+                additionalPct >= 90 ? theme.fg("error",   additionalBarStr) :
+                additionalPct >= 75 ? theme.fg("warning", additionalBarStr) :
+                                       theme.fg("dim",     additionalBarStr),
+              );
+            }
           } else {
             parts.push(theme.fg("dim", "GH:…"));
           }
