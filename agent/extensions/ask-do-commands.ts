@@ -133,9 +133,11 @@ export default function askDoExtension(pi: ExtensionAPI) {
     // Default to ask model since auto-ask is enabled on startup
     await setModeModel("ask", ctx);
 
+    // Set the default indicator for every new, resumed, forked, or reloaded session.
+    updateStatus("normal", ctx, state.autoAskEnabled);
+
     if (event.reason === "startup") {
       ctx.ui.notify(NOTIFICATIONS.startup, "info");
-      updateStatus("normal", ctx, state.autoAskEnabled);
     }
   });
 

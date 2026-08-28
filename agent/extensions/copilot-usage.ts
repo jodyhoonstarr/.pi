@@ -317,14 +317,19 @@ export default function (pi: ExtensionAPI) {
           const dimLeft  = theme.fg("dim", leftStr);
           const dimRight = theme.fg("dim", right);
 
-          if (lw + minPad + rw <= width) {
-            const pad = " ".repeat(width - lw - rw);
-            return [dimLeft + pad + dimRight];
-          } else if (lw + minPad <= width) {
-            const avail = width - lw - minPad;
-            return [dimLeft + "  " + theme.fg("dim", truncateToWidth(right, avail, ""))];
+          const horizontalPadding = width >= 3 ? 1 : 0;
+          const contentWidth = Math.max(1, width - horizontalPadding * 2);
+          const padLine = (line: string): string =>
+            " ".repeat(horizontalPadding) + line + " ".repeat(horizontalPadding);
+
+          if (lw + minPad + rw <= contentWidth) {
+            const pad = " ".repeat(contentWidth - lw - rw);
+            return [padLine(dimLeft + pad + dimRight)];
+          } else if (lw + minPad <= contentWidth) {
+            const avail = contentWidth - lw - minPad;
+            return [padLine(dimLeft + "  " + theme.fg("dim", truncateToWidth(right, avail, "")))];
           } else {
-            return [truncateToWidth(dimLeft, width, theme.fg("dim", "..."))];
+            return [padLine(truncateToWidth(dimLeft, contentWidth, theme.fg("dim", "...")))];
           }
         },
       };
