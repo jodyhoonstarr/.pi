@@ -22,10 +22,13 @@ const PAT = process.env.GITHUB_READONLY_PLAN_PAT ?? "";
 
 const POLL_MS = 5 * 60 * 1_000;
 const ADDITIONAL_USAGE_CAP = 10;
+// This account's included-credit billing cycle resets on the 7th.
+const BILLING_CYCLE_START_DAY = 7;
 
 // Monthly AI credit allowances keyed by Copilot token SKU
 const SKU_CAP: Record<string, number> = {
   free: 50,
+  monthly_subscriber_quota: 1_500,
   pro_monthly_subscriber_quota: 1_000,
   pro_yearly_subscriber_quota: 1_000,
   plus_monthly_subscriber_quota: 7_000,
@@ -134,29 +137,71 @@ export default function (pi: ExtensionAPI) {
     const now = new Date();
     const y = now.getUTCFullYear();
     const m = now.getUTCMonth() + 1;
-    try {
+    type UsageBody = {
+      usageItems?: Array<{ grossQuantity?: number; netAmount?: number }>;
+    };
+    const fetchUsage = async (year: number, month: number, day?: number): Promise<UsageBody> => {
+      const params = new URLSearchParams({ year: String(year), month: String(month) });
+      if (day !== undefined) params.set("day", String(day));
       const r = await fetch(
-        `https://api.github.com/users/${ghUser}/settings/billing/ai_credit/usage?year=${y}&month=${m}`,
+        `https://api.github.com/users/${ghUser}/settings/billing/ai_credit/usage?${params}`,
         { headers: ghHeaders() },
       );
       if (!r.ok) {
-        creditsErr =
-          r.status === 401 ? "token expired" :
-          r.status === 403 ? "permission denied" :
-          `GH ${r.status}`;
-        tuiRef?.requestRender();
-        return;
+        throw Object.assign(new Error(`GH ${r.status}`), { status: r.status });
       }
-      const body = (await r.json()) as {
-        usageItems: Array<{ grossQuantity: number; netAmount?: number }>;
-      };
-      // grossQuantity can be fractional — round to nearest whole credit
-      creditsUsed = Math.round(body.usageItems.reduce((s, x) => s + x.grossQuantity, 0));
+      return (await r.json()) as UsageBody;
+    };
+    const sumUsage = (body: UsageBody, key: "grossQuantity" | "netAmount"): number =>
+      (body.usageItems ?? []).reduce((sum, item) => sum + (item[key] ?? 0), 0);
+
+    try {
+      const current = await fetchUsage(y, m);
+      let gross = sumUsage(current, "grossQuantity");
+      let net = sumUsage(current, "netAmount");
+      const preCycleDays = Array.from(
+        { length: BILLING_CYCLE_START_DAY - 1 },
+        (_, index) => index + 1,
+      );
+
+      if (now.getUTCDate() >= BILLING_CYCLE_START_DAY) {
+        // The API reports calendar months; exclude days before this cycle began.
+        const beforeCycle = await Promise.all(
+          preCycleDays.map((day) => fetchUsage(y, m, day)),
+        );
+        gross -= beforeCycle.reduce((sum, body) => sum + sumUsage(body, "grossQuantity"), 0);
+        net -= beforeCycle.reduce((sum, body) => sum + sumUsage(body, "netAmount"), 0);
+      } else {
+        // During days 1-6, the cycle started in the previous calendar month.
+        const previousMonth = m === 1 ? 12 : m - 1;
+        const previousYear = m === 1 ? y - 1 : y;
+        const previous = await fetchUsage(previousYear, previousMonth);
+        const previousBeforeCycle = await Promise.all(
+          preCycleDays.map((day) => fetchUsage(previousYear, previousMonth, day)),
+        );
+        gross += sumUsage(previous, "grossQuantity");
+        net += sumUsage(previous, "netAmount");
+        gross -= previousBeforeCycle.reduce(
+          (sum, body) => sum + sumUsage(body, "grossQuantity"),
+          0,
+        );
+        net -= previousBeforeCycle.reduce(
+          (sum, body) => sum + sumUsage(body, "netAmount"),
+          0,
+        );
+      }
+
+      // grossQuantity can be fractional — round to nearest whole credit.
+      creditsUsed = Math.max(0, Math.round(gross));
       // netAmount is the amount billed after included-credit discounts, i.e. additional usage.
-      additionalUsageUsed = body.usageItems.reduce((s, x) => s + (x.netAmount ?? 0), 0);
+      additionalUsageUsed = Math.max(0, net);
       creditsErr = null;
-    } catch {
-      creditsErr = "network err";
+    } catch (error) {
+      const status = (error as { status?: unknown }).status;
+      creditsErr =
+        status === 401 ? "token expired" :
+        status === 403 ? "permission denied" :
+        "network err";
     }
     tuiRef?.requestRender();
   }
@@ -223,8 +268,8 @@ export default function (pi: ExtensionAPI) {
           if (ctxUsage?.percent != null) {
             const ctxStr = contextProgressBar(ctxUsage.percent);
             parts.push(
-              ctxUsage.percent > 90 ? theme.fg("error",   ctxStr) :
-              ctxUsage.percent > 70 ? theme.fg("warning", ctxStr) :
+              ctxUsage.percent >= 50 ? theme.fg("error",   ctxStr) :
+              ctxUsage.percent >= 30 ? theme.fg("warning", ctxStr) :
                                       ctxStr,
             );
           }

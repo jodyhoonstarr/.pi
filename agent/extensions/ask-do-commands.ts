@@ -33,7 +33,7 @@ export default function askDoExtension(pi: ExtensionAPI) {
   const ASK_MODEL = { provider: "github-copilot", id: "gpt-5.6-luna" };
   const DO_MODEL = { provider: "github-copilot", id: "gpt-5.6-luna" };
   const ASK_THINKING_LEVEL = "medium" as const;
-  const DO_THINKING_LEVEL = "xhigh" as const;
+  const DO_THINKING_LEVEL = "max" as const;
   const STATUS_MESSAGES = {
     ask: "🔒 ASK (+r)",
     do: "🔓 DO (+rw)",
