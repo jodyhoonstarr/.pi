@@ -4,7 +4,7 @@
       {
         "id": "claude-fable-5",
         "name": "Claude Fable 5",
-        "api": "openai-completions",
+        "api": "anthropic-messages",
         "provider": "github-copilot",
         "baseUrl": "https://api.individual.githubcopilot.com",
         "reasoning": true,
@@ -26,15 +26,13 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsStore": false,
-          "supportsDeveloperRole": false,
-          "supportsReasoningEffort": false
-        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true
         }
       },
       {
@@ -1188,8 +1186,8 @@
         }
       }
     ],
-    "checkedAt": 1787925706782,
-    "lastModified": 1787917513000,
-    "etag": "W/\"01366c935f2ca0d954e1fd5ddb582511\""
+    "checkedAt": 1788437682542,
+    "lastModified": 1788352788000,
+    "etag": "W/\"ab9e007ac1d460cb94ead0120accda89\""
   }
 }
